@@ -3,7 +3,7 @@ import shutil
 from PIL import Image
 import pillow_heif
 from pathlib import Path
-
+# Test From WSL
 if __name__ == "__main__":
     
     
