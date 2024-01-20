@@ -1,0 +1,5 @@
+.python-version
+.env_dev
+RawPhotos/
+OrganizedPhotos/
+.env
