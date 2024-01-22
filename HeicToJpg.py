@@ -4,33 +4,40 @@ from PIL import Image
 import pillow_heif
 from pathlib import Path
 import dotenv
-import numpy as np
+import glob
 
 dotenv.load_dotenv();
 
 if __name__ == "__main__":
-    #"\\192.168.2.93\photos\Mobile backup"
     input_dir = os.getenv('input_dir')
     output_dir = os.getenv('output_dir')
     
-    files = Path(input_dir).glob('*') #Currently not working to read through subfolders
-    
-    for file in files:
+    files = glob.glob(os.path.join(input_dir,'**','*'), recursive=True)
+    for str_file in files:
+        file = Path(str_file)
         if file.stem.startswith('.'):
+            
             continue
+        
         elif file.suffix in ['.mov', '.MOV']:
             #convert to mp4
             #extract date taken information
             #organize in a new folder based on date taken
             pass
+        
         elif file.suffix in ['.heic', '.HEIC']:
             pillow_heif.register_heif_opener()
-            input_path = os.path.join(input_dir,file.name)
-            img = Image.open(input_path)
+            img = Image.open(file)
+            img.save(os.path.join(output_dir,file.stem+'.jpeg'))
             
-            # img.save(os.path.join(output_dir,file.stem+'.jpeg'))
-            
-            timestamp = os.path.getmtime(input_path)
+            #timestamp = os.path.getmtime(file)
+        
+        elif file.suffix in ['.jpg', '.JPG']:  
+            if file.suffix == '.jpg':
+                shutil.copy2(str_file,os.path.join(output_dir,file.stem+'.jpeg'))
+            else:
+                shutil.copy2(str_file,os.path.join(output_dir,file.stem+'.jpeg'))
+                
 
             
             # Finding the date of the image (not working yet)
@@ -41,7 +48,7 @@ if __name__ == "__main__":
             #convert to jpg
             #extract date taken information
             #organize in a new folder based on date taken
-            continue
+
         
 
     
