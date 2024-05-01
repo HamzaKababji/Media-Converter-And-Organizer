@@ -3,3 +3,7 @@
 RawPhotos/
 OrganizedPhotos/
 .env
+build/
+dist/
+Gui.spec
+__pycache__/
