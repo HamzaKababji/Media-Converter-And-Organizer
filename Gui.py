@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import sys
 import os
+import threading
 import Organizer
 
 def browse_folder(path_entry):
@@ -18,9 +19,14 @@ def start_organizing(input_path, output_path):
         progress_bar['value'] = value
         root.update_idletasks()
 
-    Organizer.main_process(input_path.get(), output_path.get(), update_progress)
-    
-    messagebox.showinfo("Success", "Files have been organized successfully!")
+    def threaded_organize():
+        Organizer.main_process(input_path.get(), output_path.get(), update_progress)
+        # This needs to be done on the main thread
+        root.after(0, lambda: messagebox.showinfo("Success", "Files have been organized successfully!"))
+
+    # Create and start a new thread for the long-running task
+    thread = threading.Thread(target=threaded_organize)
+    thread.start()
 
 root = tk.Tk()
 root.title("File Organizer")

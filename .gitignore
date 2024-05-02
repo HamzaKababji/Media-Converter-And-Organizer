@@ -5,5 +5,6 @@ OrganizedPhotos/
 .env
 build/
 dist/
-Gui.spec
+MediaOrganizer.spec
 __pycache__/
+ffmpeg-master-latest-win64-gpl/
