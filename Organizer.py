@@ -18,7 +18,7 @@ def convert_to_mp4(source, target):
     logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w',
                         format='%(name)s - %(levelname)s - %(message)s')
     
-    ffmpeg_path = r'C:\Users\hamza\OneDrive - The University of Western Ontario\Personal\Projects\File-and-Folder-Converter-And-Organizer\ffmpeg-master-latest-win64-gpl\bin\ffmpeg.exe'
+    ffmpeg_path = r'ffmpeg-master-latest-win64-gpl\bin\ffmpeg.exe'
     
     command = [ffmpeg_path, '-i', source, '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac', target]
     

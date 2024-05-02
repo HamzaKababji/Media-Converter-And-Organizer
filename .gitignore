@@ -8,3 +8,4 @@ dist/
 MediaOrganizer.spec
 __pycache__/
 ffmpeg-master-latest-win64-gpl/
+app.log
