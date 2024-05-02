@@ -21,10 +21,8 @@ def start_organizing(input_path, output_path):
 
     def threaded_organize():
         Organizer.main_process(input_path.get(), output_path.get(), update_progress)
-        # This needs to be done on the main thread
         root.after(0, lambda: messagebox.showinfo("Success", "Files have been organized successfully!"))
 
-    # Create and start a new thread for the long-running task
     thread = threading.Thread(target=threaded_organize)
     thread.start()
 

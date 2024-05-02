@@ -6,7 +6,6 @@ import glob
 from datetime import datetime
 import pillow_heif
 from PIL import Image
-import ffmpeg
 import subprocess
 import logging
 
@@ -16,30 +15,22 @@ import subprocess
 import logging
 
 def convert_to_mp4(source, target):
-    # Configure logging
     logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w',
                         format='%(name)s - %(levelname)s - %(message)s')
     
-    # Define the path to ffmpeg.exe
     ffmpeg_path = r'C:\Users\hamza\OneDrive - The University of Western Ontario\Personal\Projects\File-and-Folder-Converter-And-Organizer\ffmpeg-master-latest-win64-gpl\bin\ffmpeg.exe'
     
-    # Prepare the command to run ffmpeg
     command = [ffmpeg_path, '-i', source, '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac', target]
     
     try:
-        # Log the command to be executed
         logging.debug(f"Running command: {' '.join(command)}")
         
-        # Execute the command
         subprocess.run(command, check=True)
         
-        # Log the successful execution
         logging.debug("Conversion successful")
     except subprocess.CalledProcessError as e:
-        # Log the error if the command fails
         logging.error(f"ffmpeg command failed with return code {e.returncode}")
     except Exception as e:
-        # Log any other exceptions that may occur
         logging.error(f"Failed to execute command: {e}")
 
 def get_date_modified(file_path):
@@ -73,7 +64,6 @@ def organize_files(input_dir, output_dir, update_progress=None):
             elif file.suffix.lower() in ['.jpg', '.jpeg']:
                 shutil.copy2(str_file, output_path)
 
-        # Check if the file exists before moving it
         if os.path.exists(output_path):
             year = date_modified.strftime("%Y")
             month = date_modified.strftime("%m")
