@@ -2,9 +2,11 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 import pillow_heif
-from PIL import Image
+from PIL import Image, ExifTags
 import subprocess
 import sys
+from hachoir.parser import createParser
+from hachoir.metadata import extractMetadata
 
 def get_base_path():
     if getattr(sys, 'frozen', False):
@@ -29,13 +31,47 @@ def convert_to_mp4(source, target):
     except Exception as e:
         print(f"An error occurred during video conversion: {e}")
 
+def get_media_created_date(file_path):
+    parser = createParser(str(file_path))
+    if not parser:
+        return None
+    try:
+        with parser:
+            metadata = extractMetadata(parser)
+        if metadata:
+            return metadata.get('creation_date')
+    except Exception as e:
+        print(f"Failed to extract metadata from {file_path}: {e}")
+    return None
+
+def get_date_taken(file_path):
+    try:
+        with Image.open(file_path) as img:
+            exif_data = img._getexif()
+            if exif_data:
+                date_taken_tag = ExifTags.TAGS.keys() & {v: k for k, v in ExifTags.TAGS.items() if v == 'DateTimeOriginal'}
+                if date_taken_tag:
+                    date_taken = exif_data.get(next(iter(date_taken_tag)))
+                    if date_taken:
+                        return datetime.strptime(date_taken, '%Y:%m:%d %H:%M:%S')
+    except Exception as e:
+        print(f"Could not extract EXIF data from {file_path}: {e}")
+    return None
+
 def get_date_modified(file_path):
+    if file_path.suffix.lower() in ['.mov', '.mp4']:
+        date_created = get_media_created_date(file_path)
+        if date_created:
+            return date_created
+    date_taken = get_date_taken(file_path)
+    if date_taken:
+        return date_taken
     return datetime.fromtimestamp(file_path.stat().st_mtime)
 
 def organize_files(input_dir, output_dir, update_progress=None):
     input_path = Path(input_dir).resolve()
     output_path = Path(output_dir).resolve()
-    files = list(input_path.rglob('*'))  # Recursively list all files
+    files = list(input_path.rglob('*'))
     total_files = len(files)
     processed_files = 0
 
@@ -66,8 +102,8 @@ def organize_files(input_dir, output_dir, update_progress=None):
         if new_file_path.exists():
             destination_folder = output_path / date_modified.strftime("%Y") / date_modified.strftime("%m")
             destination_folder = destination_folder.resolve()
-            destination_folder.mkdir(parents=True, exist_ok=True)  # Creates the directory if it doesn't exist
-            shutil.move(str(new_file_path), str(destination_folder / new_file_path.name))  # Move the file
+            destination_folder.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(new_file_path), str(destination_folder / new_file_path.name))
             print("File moved to:", destination_folder)
         else:
             print(f"Expected to move file but it does not exist: {new_file_path}")
@@ -82,3 +118,4 @@ def organize_files(input_dir, output_dir, update_progress=None):
 
 def main_process(input_dir, output_dir, update_progress=None):
     organize_files(input_dir, output_dir, update_progress)
+
