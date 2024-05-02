@@ -1,79 +1,76 @@
-import os
 import shutil
 from pathlib import Path
-import dotenv
-import glob
 from datetime import datetime
 import pillow_heif
 from PIL import Image
 import subprocess
-import logging
+import sys
 
-dotenv.load_dotenv()
+def get_base_path():
+    if getattr(sys, 'frozen', False):
+        return Path(sys._MEIPASS)
+    else:
+        return Path(__file__).resolve().parent
 
-import subprocess
-import logging
+base_path = get_base_path()
 
 def convert_to_mp4(source, target):
-    logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w',
-                        format='%(name)s - %(levelname)s - %(message)s')
-    
-    ffmpeg_path = r'ffmpeg-master-latest-win64-gpl\bin\ffmpeg.exe'
-    
-    command = [ffmpeg_path, '-i', source, '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac', target]
-    
+    ffmpeg_path = get_base_path() / 'ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe'
+    ffmpeg_path = ffmpeg_path.resolve(strict=True)
+
+    if not ffmpeg_path.exists():
+        raise FileNotFoundError(f"ffmpeg executable not found at {ffmpeg_path}")
+
+    command = [str(ffmpeg_path), '-i', str(source), '-c:v', 'libx264', '-preset', 'fast', '-c:a', 'aac', str(target)]
     try:
-        logging.debug(f"Running command: {' '.join(command)}")
-        
         subprocess.run(command, check=True)
-        
-        logging.debug("Conversion successful")
     except subprocess.CalledProcessError as e:
-        logging.error(f"ffmpeg command failed with return code {e.returncode}")
+        print(f"Failed to convert video {source}. Error: {e}")
     except Exception as e:
-        logging.error(f"Failed to execute command: {e}")
+        print(f"An error occurred during video conversion: {e}")
 
 def get_date_modified(file_path):
-    timestamp = os.path.getmtime(file_path)
-    return datetime.fromtimestamp(timestamp)
+    return datetime.fromtimestamp(file_path.stat().st_mtime)
 
 def organize_files(input_dir, output_dir, update_progress=None):
-    files = glob.glob(os.path.join(input_dir, '**', '*'), recursive=True)
+    input_path = Path(input_dir).resolve()
+    output_path = Path(output_dir).resolve()
+    files = list(input_path.rglob('*'))  # Recursively list all files
     total_files = len(files)
     processed_files = 0
 
-    for str_file in files:
-        file = Path(str_file)
-        if file.stem.startswith('.') or file.is_dir():
+    for file in files:
+        if file.name.startswith('.') or file.is_dir():
             continue
 
-        date_modified = get_date_modified(str_file)
-        output_path = os.path.join(output_dir, file.stem + file.suffix.lower().replace('.heic', '.jpeg').replace('.mov', '.mp4'))
+        date_modified = get_date_modified(file)
+        new_suffix = file.suffix.lower().replace('.heic', '.jpeg').replace('.mov', '.mp4')
+        new_file_name = file.stem + new_suffix
+        new_file_path = output_path / new_file_name
+        new_file_path = new_file_path.resolve()
 
-        if not os.path.exists(output_path):
+        if not new_file_path.exists():
             if file.suffix.lower() in ['.mov', '.mp4']:
-                convert_to_mp4(str_file, output_path)
+                convert_to_mp4(file, new_file_path)
             elif file.suffix.lower() in ['.heic']:
                 pillow_heif.register_heif_opener()
                 try:
-                    img = Image.open(str_file)
-                    img.save(output_path)
+                    img = Image.open(file)
+                    img.save(new_file_path)
                     img.close()
                 except Exception as e:
-                    logging.error(f"Error handling HEIC file {str_file}: {e}")
+                    print(f"Error handling HEIC file {file}: {e}")
             elif file.suffix.lower() in ['.jpg', '.jpeg']:
-                shutil.copy2(str_file, output_path)
+                shutil.copy2(file, new_file_path)
 
-        if os.path.exists(output_path):
-            year = date_modified.strftime("%Y")
-            month = date_modified.strftime("%m")
-            destination_folder = os.path.join(output_dir, year, month)
-            if not os.path.exists(destination_folder):
-                os.makedirs(destination_folder)
-            shutil.move(output_path, os.path.join(destination_folder, os.path.basename(output_path)))
+        if new_file_path.exists():
+            destination_folder = output_path / date_modified.strftime("%Y") / date_modified.strftime("%m")
+            destination_folder = destination_folder.resolve()
+            destination_folder.mkdir(parents=True, exist_ok=True)  # Creates the directory if it doesn't exist
+            shutil.move(str(new_file_path), str(destination_folder / new_file_path.name))  # Move the file
             print("File moved to:", destination_folder)
         else:
-            logging.error(f"Expected to move file but it does not exist: {output_path}")
+            print(f"Expected to move file but it does not exist: {new_file_path}")
 
         processed_files += 1
         if update_progress and total_files > 0:
@@ -83,11 +80,5 @@ def organize_files(input_dir, output_dir, update_progress=None):
     if update_progress:
         update_progress(100)
 
-    
 def main_process(input_dir, output_dir, update_progress=None):
     organize_files(input_dir, output_dir, update_progress)
-
-if __name__ == "__main__":
-    input_dir = os.getenv('input_dir')
-    output_dir = os.getenv('output_dir')
-    main_process(input_dir, output_dir)
