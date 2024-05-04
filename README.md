@@ -66,15 +66,15 @@ _Until I publish this software on the Microsoft Store (Hopefully), you will have
 #### 4. Install any Required Dependencies in Your Environment
 
    ```bash
-    pip install Pillow
+     pip install Pillow
    ```
 
    ```bash
-      pip install pillow_heif
+     pip install pillow_heif
    ```
 
    ```bash
-    pip install hachoir
+     pip install hachoir
    ```
 
    **You MUST also install ffmpeg.exe by going to [this](https://ffmpeg.org/download.html) link and then replace the file path in Organizer.py Line 20.**
