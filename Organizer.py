@@ -17,7 +17,7 @@ def get_base_path():
 base_path = get_base_path()
 
 def convert_to_mp4(source, target):
-    ffmpeg_path = get_base_path() / 'ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe'
+    ffmpeg_path = get_base_path() / 'Link your ffmpeg.exe file here with / in between file paths'
     ffmpeg_path = ffmpeg_path.resolve(strict=True)
 
     if not ffmpeg_path.exists():
