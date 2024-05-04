@@ -69,11 +69,11 @@ _Until I publish this software on the Microsoft Store (Hopefully), you will have
     pip install Pillow
    ```
 
-    ```bash
-    pip install pillow_heif
+   ```bash
+      pip install pillow_heif
    ```
 
-    ```bash
+   ```bash
     pip install hachoir
    ```
 
